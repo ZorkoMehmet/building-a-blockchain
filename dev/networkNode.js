@@ -86,13 +86,21 @@ app.post("/register-node", function (req, res) {
   const notAlreadyPresent = bitcoin.networkNodes.indexOf(newNodeUrl) == -1;
   const notCurrentNode = bitcoin.currentNodeUrl !== newNodeUrl;
   if (notAlreadyPresent && notCurrentNode) bitcoin.networkNodes.push(newNodeUrl);
-  res.json({ note: "New node registered successfully with node." });
+  res.json({ note: "New node registered successfully." });
 });
 
 app.post("/register-nodes-bulk", function (req, res) {
+  const allNetworkNodes = req.body.allNetworkNodes;
 
+  allNetworkNodes.forEach(networkNodeUrl => {
+    const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(networkNodeUrl) == -1;
+    const notCurrentNode = bitcoin.currentNodeUrl !== networkNodeUrl;
+    if (nodeNotAlreadyPresent && notCurrentNode)  bitcoin.networkNodes.push(networkNodeUrl);
+  })
 });
-
+  res.json({
+    note: "Bulk registration successfull."
+  })
 app.listen(port, function () {
   console.log(`Listening on port ${port}...`);
 });
