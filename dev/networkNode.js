@@ -19,15 +19,13 @@ app.get("/blockchain", function (req, res) {
 });
 
 app.post("/transaction", function (req, res) {
-  const blockIndex = bitcoin.createNewTransaction(
-    req.body.amount,
-    req.body.sender,
-    req.body.recipient
-  );
-  res.json({ note: `Transaction will be in block number ${blockIndex}.` });
+  const newTransaction = req.body;
+  const blockIndex =
+    bitcoin.addTransactionToPendingTransactions(newTransaction);
+  res.json({ note: `Transaction will be added in block ${blockIndex}.` });
 });
 
-app.post("transaction/broadcast", function (req, res) {
+app.post("/transaction/broadcast", function (req, res) {
   const newTransaction = bitcoin.createNewTransaction(
     req.body.amount,
     req.body.sender,
@@ -44,14 +42,12 @@ app.post("transaction/broadcast", function (req, res) {
       json: true,
     };
 
-	requestPromises.push(rp(requestOptions));
+    requestPromises.push(rp(requestOptions));
   });
 
-  Promise.all(requestPromises)
-  .then(data => {
-	res.json({ note: "Transaction created and broadcast successfully." })
-  })
-
+  Promise.all(requestPromises).then((data) => {
+    res.json({ note: "Transaction created and broadcast successfully." });
+  });
 });
 
 app.get("/mine", function (req, res) {
@@ -73,11 +69,40 @@ app.get("/mine", function (req, res) {
   bitcoin.createNewTransaction(12.5, "00", nodeAddress);
 
   const newBlock = bitcoin.createNewBlock(nonce, previousBlockHash, blockHash);
-  res.json({
-    note: "New block has been mined successfully.",
-    block: newBlock,
+
+  bitcoin.networkNodes.forEach((networkNodeUrl) => {
+    const requestPromises = [];
+    const requestOptions = {
+      uri: networkNodeUrl + "/receive-new-block",
+      method: "POST",
+      body: { newBlock: newBlock },
+      json: true,
+    };
+    requestPromises.push(rp(requestOptions));
   });
+  Promise.all(requestPromises)
+    .then((data) => {
+      const requestOptions = {
+        uri: bitcoin.currentNodeUrl + "/transaction/broadcast",
+        method: "POST",
+        body: {
+          amount: 12.5,
+          sender: "00",
+          recipient: nodeAddress,
+        },
+        json: true,
+      };
+      return rp(requestOptions);
+    })
+    .then((data) => {
+      res.json({
+        note: "New block has been mined & broadcast successfully.",
+        block: newBlock,
+      });
+    });
 });
+
+
 
 app.post("/register-and-broadcast-node", function (req, res) {
   const newNodeUrl = req.body.newNodeUrl;
