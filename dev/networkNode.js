@@ -69,15 +69,15 @@ app.get("/mine", function (req, res) {
   bitcoin.createNewTransaction(12.5, "00", nodeAddress);
 
   const newBlock = bitcoin.createNewBlock(nonce, previousBlockHash, blockHash);
+  const requestPromises = [];
 
   bitcoin.networkNodes.forEach((networkNodeUrl) => {
-    const requestPromises = [];
     const requestOptions = {
       uri: networkNodeUrl + "/receive-new-block",
       method: "POST",
       body: { newBlock: newBlock },
       json: true,
-    };
+    }; 
     requestPromises.push(rp(requestOptions));
   });
   Promise.all(requestPromises)
