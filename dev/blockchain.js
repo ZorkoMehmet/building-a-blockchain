@@ -82,6 +82,7 @@ Blockchain.prototype.proofOfWork = function (
   return nonce;
 };
 
+
 Blockchain.prototype.chainIsValid = function (blockchain) {
   let validChain = true;
 
@@ -103,11 +104,16 @@ Blockchain.prototype.chainIsValid = function (blockchain) {
 
   const genesisBlock = blockchain[0];
   const correctNonce = genesisBlock["nonce"] === 100;
-  const correctPreviousBlockHash = genesisBlock["previousBlockHas"] === "0";
+  const correctPreviousBlockHash = genesisBlock["previousBlockHash"] === "0";
   const correctHash = genesisBlock["hash"] === "0";
   const correctTransactions = genesisBlock["transactions"].length === 0;
 
-  if (!correctNonce || !correctPreviousBlockHash || !correctHash || !correctData) validChain = false;
+  if (
+    !correctNonce ||
+    !correctPreviousBlockHash ||
+    !correctHash ||
+    !correctTransactions
+  ) validChain = false;
 
   return validChain;
 };
